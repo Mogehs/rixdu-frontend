@@ -1,0 +1,91 @@
+import * as assets from '../assets';
+
+// All favorites mock data
+export const favoritesData = [
+  {
+    id: 1,
+    title: 'The Mansion',
+    price: '350000 AED',
+    details: {
+      Bedrooms: '1',
+      Bathrooms: '2',
+      Size: '850',
+    },
+    location: 'Dubai Dubai Harbour | Emaar Beachfront',
+    images: [assets.popularResedential1],
+    categoryName: 'property',
+    isVerified: true,
+  },
+  {
+    id: 2,
+    title: 'Luxury Villa',
+    price: '4,500,000 AED',
+    details: {
+      Bedrooms: '4',
+      Bathrooms: '5',
+      Size: '3500',
+    },
+    location: 'Dubai, Palm Jumeirah',
+    images: [assets.popularResedential2],
+    categoryName: 'property',
+    isVerified: true,
+    isFeatured: true,
+  },
+  {
+    id: 3,
+    title: 'Modern Apartment',
+    price: '850,000 AED',
+    details: {
+      Bedrooms: '2',
+      Bathrooms: '2',
+      Size: '1200',
+    },
+    location: 'Dubai, Downtown Dubai',
+    images: [assets.popularResedential3],
+    categoryName: 'property',
+    isVerified: true,
+  },
+  {
+    id: 4,
+    title: 'Cozy Studio',
+    price: '4,500 AED/month',
+    details: {
+      Bedrooms: '1',
+      Bathrooms: '1',
+      Size: '450',
+    },
+    location: 'Dubai, Business Bay',
+    images: [assets.popularResedential1],
+    categoryName: 'property',
+    isVerified: false,
+  },
+  {
+    id: 5,
+    title: 'Family Villa',
+    price: '25,000 AED/month',
+    details: {
+      Bedrooms: '4',
+      Bathrooms: '5',
+      Size: '3200',
+    },
+    location: 'Dubai, Emirates Hills',
+    images: [assets.popularResedential2],
+    categoryName: 'property',
+    isVerified: true,
+  },
+  {
+    id: 6,
+    title: 'The Mansion',
+    price: '356000 AED',
+    details: {
+      Bedrooms: '1',
+      Bathrooms: '2',
+      Size: '826',
+    },
+    location: 'Dubai, Dubai Harbour, Emar beachfront',
+    images: [assets.popularResedential3],
+    categoryName: 'property',
+    isVerified: true,
+    isFeatured: true,
+  },
+];

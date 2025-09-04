@@ -1,0 +1,24 @@
+Options -MultiViews -Indexes
+
+RewriteEngine On
+
+# Set RewriteBase if your site is in a subdirectory (uncomment and adjust if needed)
+# RewriteBase /public/
+
+# Route all requests to index.html if not a real file or directory
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.html [QSA,L]
+
+# Enable CORS
+Header set Access-Control-Allow-Origin "*"
+
+# Caching for static assets
+<FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$">
+    Header set Cache-Control "max-age=31536000, public"
+</FilesMatch>
+
+# Protect against XSS attacks
+Header set X-XSS-Protection "1; mode=block"
+Header set X-Content-Type-Options "nosniff"
+Header set X-Frame-Options "SAMEORIGIN"

@@ -1,0 +1,517 @@
+import React, { useState, useEffect } from 'react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import Header fr          // Check for subitem match if there are subitems
+          if (item.subItems && subSection) {
+            for (const subItem of item.subItems) {
+              if (subItem.path.toLowerCase() === subSectionNormalized) {
+                foundSubItem = subItem;
+                return {
+                  mainItemKey: item.key,
+                  activeItemKey: subItem.key
+                };
+              }er';
+import Footer from './Footer';
+import {
+  FaUser,
+  FaBriefcase,
+  FaUsers,
+  FaBell,
+  FaHeart,
+  FaCar,
+  FaBookmark,
+  FaChevronDown,
+  FaMapMarkerAlt,
+  FaInfoCircle,
+  FaHistory,
+  FaFileAlt,
+  FaCog,
+  FaEnvelope,
+  FaLock,
+  FaIdCard,
+  FaCalendarAlt,
+  FaClipboardList,
+  FaCarAlt,
+  FaTools,
+  FaStar,
+  FaList,
+  FaBars,
+  FaTimes,
+  FaSearch,
+} from 'react-icons/fa';
+
+const DashboardLayout = () => {
+  const navigate = useNavigate();
+  const location = useLocation(); // Get current location
+  const [activeItem, setActiveItem] = useState('profile_info'); // Set default active item
+  const [openDropdown, setOpenDropdown] = useState('my_profile'); // Default open dropdown
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  // Define sidebar items structure with paths
+  const sidebarItems = [
+    {
+      key: 'my_profile',
+      label: 'My Profile',
+      icon: FaUser,
+      basePath: 'dashboard/my-profile',
+      subItems: [
+        {
+          key: 'profile_info',
+          label: 'Profile Info',
+          icon: FaInfoCircle,
+          path: 'profile',
+        },
+        {
+          key: 'my_address',
+          label: 'My Address',
+          icon: FaMapMarkerAlt,
+          path: 'address',
+        },
+      ],
+    },
+    {
+      key: 'job_profile',
+      label: 'My Job Profile',
+      icon: FaBriefcase,
+      basePath: 'dashboard/job-profile',
+    },
+    {
+      key: 'public_profile',
+      label: 'My Public Profile',
+      icon: FaUsers,
+      basePath: 'dashboard/public-profile',
+    },
+    {
+      key: 'notification',
+      label: 'Notification',
+      icon: FaBell,
+      basePath: 'dashboard/notifications/all',
+    },
+    {
+      key: 'favorite',
+      label: 'Favorite',
+      icon: FaHeart,
+      basePath: 'dashboard/favorites',
+      subItems: [
+        {
+          key: 'all_categories',
+          label: 'All Categories',
+          icon: FaList,
+          path: 'categories',
+          subCategories: [
+            { key: 'motors', label: 'Motors', path: '' },
+            {
+              key: 'properties_for_sale',
+              label: 'Properties for Sale',
+              path: '',
+            },
+            { key: 'classified', label: 'Classified', path: '' },
+          ],
+        },
+      ],
+    },
+    {
+      key: 'car_appointment',
+      label: 'Car Appointment',
+      icon: FaCar,
+      basePath: 'dashboard/car-appointment',
+    },
+    {
+      key: 'bookmarks',
+      label: 'My Bookmarks',
+      icon: FaBookmark,
+      basePath: 'dashboard/bookmarks',
+    },
+  ];  // Find active item based on current path
+  const findActiveItemFromPath = (path) => {
+    // Remove leading slash and split the path into segments
+    const pathSegments = path.replace(/^\//, '').split('/');
+    
+    // Path will be in format like "dashboard/my-profile/profile"
+    if (pathSegments.length >= 2 && pathSegments[0] === 'dashboard') {
+      const mainSection = pathSegments[1]; // e.g., "my-profile"
+      const subSection = pathSegments[2] || ''; // e.g., "profile" or empty
+      const subSectionNormalized = subSection.toLowerCase();
+
+      let foundMainItem = null;
+      let foundSubItem = null;
+      let foundSubCategory = null;
+
+      // Loop through main items to find a match
+      for (const item of sidebarItems) {
+        const itemBasePath = item.basePath?.split('/');
+
+        // Check if main path segment matches
+        if (itemBasePath && itemBasePath[1] === mainSection) {
+          foundMainItem = item;
+
+          // Check for subitem match if there are subitems
+          if (item.subItems && subSection) {
+            for (const subItem of item.subItems) {
+              if (subItem.path === subSection) {
+                foundSubItem = subItem;
+                return {
+                  mainItemKey: item.key,
+                  activeItemKey: subItem.key,
+                };
+              }
+
+              // Check for sub-categories
+              if (subItem.subCategories) {
+                for (const subCategory of subItem.subCategories) {
+                  if (
+                    subCategory.path === subSection ||
+                    (subSection === subItem.path && subCategory.key === 'motors') // Special case for first subcategory
+                  ) {
+                    foundSubCategory = subCategory;
+                    return {
+                      mainItemKey: item.key,
+                      activeItemKey: subCategory.key,
+                    };
+                  }
+                }
+              }
+            }
+
+            // If we found the main item but no specific subitem match,
+            // return the first subitem as active
+            if (item.subItems.length > 0) {
+              return {
+                mainItemKey: item.key,
+                activeItemKey: item.subItems[0].key,
+              };
+            }
+          }
+
+          // If no subitems or no subitem match, return the main item as active
+          return {
+            mainItemKey: item.key,
+            activeItemKey: item.key,
+          };
+        }
+      }
+    }
+
+    // Default to first item if no match found
+    return {
+      mainItemKey: 'my_profile',
+      activeItemKey: 'profile_info',
+    };
+  };
+
+  const getActiveItemDetails = () => {
+    for (const item of sidebarItems) {
+      // Check if the main item itself is the active item (for items without subItems)
+      if (item.key === activeItem) {
+        return {
+          mainItem: item,
+          subItem: {
+            icon: item.icon,
+            label: item.label,
+            key: item.key,
+          },
+        };
+      }
+
+      // Check subItems
+      const subItem = item.subItems?.find((sub) => sub.key === activeItem);
+      if (subItem) {
+        return {
+          mainItem: item,
+          subItem,
+        };
+      }
+
+      // Check subCategories
+      for (const sub of item.subItems || []) {
+        if (sub.subCategories) {
+          const subCategory = sub.subCategories.find(
+            (cat) => cat.key === activeItem
+          );
+          if (subCategory) {
+            return {
+              mainItem: item,
+              subItem: sub,
+              subCategory,
+            };
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  const handleItemClick = (key) => {
+    const clickedItem = sidebarItems.find((item) => item.key === key);
+    if (clickedItem?.subItems) {
+      const firstSubItem = clickedItem.subItems[0];
+      setActiveItem(firstSubItem.key);
+      // Ensure only one dropdown is open at a time
+      setOpenDropdown(key);
+      navigate(`/${clickedItem.basePath}/${firstSubItem.path}`);
+    } else if (clickedItem) {
+      // For items without subitems (like public_profile), navigate directly to the base path
+      setActiveItem(key);
+      // Close all dropdowns when selecting an item without subitems
+      setOpenDropdown(null);
+      navigate(`/${clickedItem.basePath}`);
+      setMobileFiltersOpen(false); // Close mobile menu when navigating directly
+    }
+  };
+
+  const handleDropdownToggle = (key) => {
+    setOpenDropdown(openDropdown === key ? null : key);
+  };
+
+  const handleSubItemClick = (mainKey, subKey, subCategory = null) => {
+    const mainItem = sidebarItems.find((item) => item.key === mainKey);
+
+    if (subCategory) {
+      // Handle subcategory click
+      const subItem = mainItem?.subItems.find(
+        (sub) => sub.key === 'all_categories'
+      );
+      const category = subItem?.subCategories.find((cat) => cat.key === subKey);
+
+      if (mainItem && subItem && category) {
+        setActiveItem(subKey); // Set the subcategory as active
+        setOpenDropdown(mainKey);
+        navigate(`/${mainItem.basePath}/${subItem.path}/${category.path}`);
+      }
+    } else {
+      // Handle regular subitem click
+      const subItem = mainItem?.subItems.find((sub) => sub.key === subKey);
+
+      if (mainItem && subItem) {
+        setActiveItem(subKey);
+        // Keep only the parent dropdown open
+        setOpenDropdown(mainKey);
+        navigate(`/${mainItem.basePath}/${subItem.path}`);
+      }
+    }
+    setMobileFiltersOpen(false);
+  };
+
+  // Update active item when location changes
+  useEffect(() => {
+    const { mainItemKey, activeItemKey } = findActiveItemFromPath(location.pathname);
+
+    // Update active item and open dropdown based on current path
+    setActiveItem(activeItemKey);
+    setOpenDropdown(mainItemKey);
+  }, [location.pathname]);
+
+  const activeDetails = getActiveItemDetails();
+
+  return (
+    <div className='flex flex-col min-h-screen'>
+      <Header />
+      <div className='flex-grow flex flex-col lg:flex-row w-full'>
+        {/* Mobile Filter Button - JobsCategoriesPage Style */}
+        <div className='lg:hidden bg-white p-4 border-b border-gray-200'>
+          <button
+            onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
+            className='flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-secondary transition-colors'
+          >
+            <svg
+              className='w-5 h-5'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z'
+              />
+            </svg>
+            Menu
+          </button>
+        </div>
+
+        {/* Left Filter Section - JobsCategoriesPage Style */}
+        <div
+          className={`
+            ${mobileFiltersOpen ? 'block' : 'hidden'} lg:block
+            w-full lg:w-80 bg-white lg:mt-4 p-4 lg:p-6 
+            lg:border-r lg:border-t border-gray-400 shadow-sm lg:rounded-tr-2xl
+            ${mobileFiltersOpen ? 'fixed inset-0 z-50 overflow-y-auto' : ''}
+          `}
+        >
+          {/* Mobile Close Button */}
+          {mobileFiltersOpen && (
+            <div className='lg:hidden flex justify-between items-center mb-4 pb-4 border-b'>
+              <h2 className='text-xl font-bold text-gray-800'>Menu</h2>
+              <button
+                onClick={() => setMobileFiltersOpen(false)}
+                className='p-2 hover:bg-gray-100 rounded-full'
+              >
+                <svg
+                  className='w-6 h-6'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M6 18L18 6M6 6l12 12'
+                  />
+                </svg>
+              </button>
+            </div>
+          )}
+          {/* Profile Setting Header */}
+          <div className='bg-gray-50 rounded-2xl p-4 mb-6'>
+            <h2 className='text-xl font-bold text-gray-800'>Profile Setting</h2>
+          </div>
+
+          <div className='space-y-2'>
+            {sidebarItems.map((item) => (
+              <div key={item.key} className='mb-4'>
+                <div
+                  className={`flex items-center justify-between p-4 cursor-pointer transition-colors ${
+                    openDropdown === item.key ||
+                    (!item.subItems && activeItem === item.key)
+                      ? 'bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100'
+                      : 'bg-gray-50 rounded-xl hover:bg-gray-100'
+                  }`}
+                  onClick={() => handleItemClick(item.key)}
+                >
+                  <div className='flex items-center gap-3'>
+                    <item.icon
+                      className={`text-xl ${
+                        openDropdown === item.key || activeItem === item.key
+                          ? 'text-blue-600'
+                          : 'text-gray-600'
+                      }`}
+                    />
+                    <span className='font-semibold text-gray-800'>
+                      {item.label}
+                    </span>
+                  </div>
+                  {item.subItems && (
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      className={`h-5 w-5 text-blue-600 transition-transform ${
+                        openDropdown === item.key ? 'rotate-180' : ''
+                      }`}
+                      fill='none'
+                      viewBox='0 0 24 24'
+                      stroke='currentColor'
+                    >
+                      <path
+                        strokeLinecap='round'
+                        strokeLinejoin='round'
+                        strokeWidth={2}
+                        d='M19 9l-7 7-7-7'
+                      />
+                    </svg>
+                  )}
+                </div>
+                {item.subItems && openDropdown === item.key && (
+                  <div className='mt-3 space-y-1 ml-4'>
+                    {item.subItems.map((subItem) => (
+                      <div
+                        key={subItem.key}
+                        className={`py-3 px-4 mx-1 rounded-lg cursor-pointer transition-colors ${
+                          activeItem === subItem.key
+                            ? 'bg-[#E6EEFA] text-gray-700 font-medium'
+                            : 'bg-gray-100 hover:bg-[#E6EEFA] text-gray-700'
+                        } ${subItem.subCategories ? 'mb-2' : ''}`}
+                        onClick={() =>
+                          handleSubItemClick(item.key, subItem.key)
+                        }
+                      >
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center gap-3'>
+                            <subItem.icon
+                              className={`text-lg ${
+                                activeItem === subItem.key
+                                  ? 'text-blue-600'
+                                  : 'text-gray-600'
+                              }`}
+                            />
+                            <span>{subItem.label}</span>
+                          </div>
+                          {subItem.subCategories && (
+                            <svg
+                              xmlns='http://www.w3.org/2000/svg'
+                              className='h-4 w-4 text-gray-600'
+                              fill='none'
+                              viewBox='0 0 24 24'
+                              stroke='currentColor'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M19 9l-7 7-7-7'
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        {subItem.subCategories && (
+                          <div className='ml-6 mt-2 space-y-1'>
+                            {subItem.subCategories.map((subCategory) => (
+                              <div
+                                key={subCategory.key}
+                                className={`py-2 px-4 rounded-lg cursor-pointer transition-colors ${
+                                  activeItem === subCategory.key
+                                    ? 'bg-[#D1E7DD] text-green-800 font-medium'
+                                    : 'bg-gray-100 hover:bg-[#D1E7DD] text-gray-700'
+                                }`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSubItemClick(
+                                    item.key,
+                                    subCategory.key,
+                                    true
+                                  );
+                                }}
+                              >
+                                <div className='flex items-center gap-3'>
+                                  <span>{subCategory.label}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Filter Buttons */}
+          {mobileFiltersOpen && (
+            <div className='flex gap-4 mt-6'>
+              <button
+                className='flex-1 py-3 text-gray-700 rounded-xl font-semibold bg-[#E5E5E5] hover:bg-[#d6d6d6] transition-colors'
+                onClick={() => setMobileFiltersOpen(false)}
+              >
+                Close
+              </button>
+              <button
+                className='flex-1 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition-colors shadow-lg'
+                onClick={() => setMobileFiltersOpen(false)}
+              >
+                Apply
+              </button>
+            </div>
+          )}
+        </div>
+
+        <main className='flex-grow p-6 rounded-lg shadow-md'>
+          <Outlet />
+        </main>
+      </div>
+      <Footer />
+    </div>
+  );
+};
+
+export default DashboardLayout;
