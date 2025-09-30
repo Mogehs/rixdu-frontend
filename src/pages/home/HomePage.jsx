@@ -4,20 +4,20 @@ import EnhancedEmirates from "./EnhancedEmirates";
 import PopularCategories from "./PopularCategories";
 import FeaturedListings from "./FeaturedListings";
 import PremiumListings from "./PremiumListings";
-import CTASection from "./CTASection";
+// import CTASection from "./CTASection";
 import HowItWorks from "./HowItWorks";
-import Testimonials from "./Testimonials";
+// import Testimonials from "./Testimonials";
 import AppPromo from "./AppPromo";
 import PopularResidential from "./PopularResidential";
-import CategoriesCards from "./CategoriesCards";
+// import CategoriesCards from "./CategoriesCards";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchHomeData } from "../../features/homeData/homeDataSlice";
+// import { fetchHomeData } from "../../features/homeData/homeDataSlice";
 import { useEffect } from "react";
 import { fetchStores } from "../../features/admin/storesSlice";
 
 const HomePage = () => {
   const dispatch = useDispatch();
-  const { stores } = useSelector((state) => state.adminStores);
+  const { stores, loading } = useSelector((state) => state.adminStores);
   useEffect(() => {
     const fetchStoresArray = async () => {
       await dispatch(fetchStores({ level: 0, root: true }));
@@ -35,7 +35,7 @@ const HomePage = () => {
       <EnhancedEmirates />
 
       {/* Popular Categories with enhanced animations */}
-      <PopularCategories categories={stores} />
+      <PopularCategories categories={stores} loading={loading} />
 
       {/* Featured Listings Carousel */}
       <FeaturedListings

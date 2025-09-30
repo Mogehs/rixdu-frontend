@@ -5,7 +5,7 @@ import { fetchStores } from "../../features/admin/storesSlice";
 
 const PremiumListings = () => {
   const dispatch = useDispatch();
-  const { stores } = useSelector((state) => state.adminStores);
+  const { stores, loading } = useSelector((state) => state.adminStores);
 
   useEffect(() => {
     // Fetch stores if not already loaded
@@ -24,6 +24,7 @@ const PremiumListings = () => {
       showCityFilter={true}
       autoPlay={true}
       autoPlayInterval={7000}
+      storeLoading={loading}
     />
   );
 };

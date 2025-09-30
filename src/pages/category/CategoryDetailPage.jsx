@@ -46,6 +46,7 @@ import useEmblaCarousel from "embla-carousel-react";
 import BackToTop from "../../components/common/BackToTop";
 import GoogleMapComponent from "../../components/common/Map/GoogleMap";
 import AdCard from "../../components/common/AdCard";
+import ErrorState from "../../components/common/ErrorState";
 import { useDispatch, useSelector } from "react-redux";
 import { getListing, searchListings } from "../../features/listings/index.js";
 import { getOrCreateChat } from "../../features/chats/chatsSlice.js";
@@ -250,31 +251,11 @@ const CategoryDetailPage = () => {
   if (error || !currentListing) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white shadow-sm rounded-lg p-8 text-center">
-          <div className="w-16 h-16 mx-auto mb-4 text-gray-400">
-            <FaExclamationTriangle className="w-full h-full" />
-          </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Listing Not Found
-          </h2>
-          <p className="text-gray-600 mb-6">
-            The listing you're looking for doesn't exist or has been removed.
-          </p>
-          <div className="space-y-3">
-            <button
-              onClick={() => navigate("/")}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
-            >
-              Go to Homepage
-            </button>
-            <button
-              onClick={() => window.history.back()}
-              className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors font-medium"
-            >
-              Go Back
-            </button>
-          </div>
-        </div>
+        <ErrorState
+          variant="minimal"
+          title="Listing not found"
+          message="The listing you're looking for doesn't exist or has been removed"
+        />
       </div>
     );
   }

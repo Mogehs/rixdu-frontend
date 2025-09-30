@@ -283,6 +283,24 @@ export const getCategoryPath = createAsyncThunk(
   }
 );
 
+export const updateFieldsForAllLeafChildren = createAsyncThunk(
+  "categories/updateFieldsForAllLeafChildren",
+  async ({ categoryId, fields }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(
+        `/${categoryId}/update-leaf-fields`,
+        { fields }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+          "Failed to update fields for leaf children"
+      );
+    }
+  }
+);
+
 // Initial state
 const initialState = {
   categories: [],
@@ -531,6 +549,23 @@ const categoriesSlice = createSlice({
       .addCase(getCategoryPath.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      // Update fields for all leaf children
+      .addCase(updateFieldsForAllLeafChildren.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.success = false;
+      })
+      .addCase(updateFieldsForAllLeafChildren.fulfilled, (state) => {
+        state.loading = false;
+        state.success = true;
+        state.error = null;
+      })
+      .addCase(updateFieldsForAllLeafChildren.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.success = false;
       });
   },
 });

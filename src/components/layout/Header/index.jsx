@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { navLinks, categoryNavigation } from "../../../data/navigationData";
-import CategoryDropdown from "./CategoryDropdown";
+import { navLinks } from "../../../data/navigationData";
 import StoreDropdown from "./StoreDropdown";
+import NavigationShimmer from "./NavigationShimmer";
 import { logoutUser } from "../../../features/auth/authSlice";
 import { useAuth0 } from "@auth0/auth0-react";
 import { getStores } from "../../../features/admin/storesSlice";
@@ -219,14 +219,11 @@ const Header = () => {
                   isCompact ? "gap-1 lg:gap-1.5" : "gap-1.5 lg:gap-2 xl:gap-3"
                 }`}
               >
-                {isCompact
-                  ? // Minimal categories when scrolling - Use stores data if available
+                {isCompact ? (
+                  // Minimal categories when scrolling - Show shimmer if no stores
+                  stores && stores.length > 0 ? (
                     (() => {
-                      const navigationData =
-                        stores && stores.length > 0
-                          ? stores
-                          : categoryNavigation;
-                      const displayedItems = navigationData.slice(0, 6);
+                      const displayedItems = stores.slice(0, 6);
 
                       return (
                         <>
@@ -234,9 +231,9 @@ const Header = () => {
                             Categories:
                           </span>
                           {displayedItems.map((item) => {
-                            // Handle both store and category data structures
+                            // Handle store data structure
                             const itemName = item.name;
-                            const itemIcon = item.icon?.url || item.icon;
+                            const itemIcon = item.icon?.url;
                             // Special handling for specific stores
                             let itemLink;
                             if (itemName?.toLowerCase() === "jobs") {
@@ -251,9 +248,9 @@ const Header = () => {
                             ) {
                               itemLink = `/garage`;
                             } else {
-                              itemLink = item.link || `/category/${item.slug}`;
+                              itemLink = `/category/${item.slug}`;
                             }
-                            const itemKey = item._id || item.id;
+                            const itemKey = item._id;
 
                             return (
                               <Link
@@ -270,96 +267,95 @@ const Header = () => {
                               </Link>
                             );
                           })}
-                          {navigationData.length > 6 && (
+                          {stores.length > 6 && (
                             <button
                               onClick={() =>
                                 window.scrollTo({ top: 0, behavior: "smooth" })
                               }
                               className="text-xs text-[var(--color-primary)] hover:text-[var(--color-secondary)] font-medium px-2 py-1"
                             >
-                              +{navigationData.length - 6} more
+                              +{stores.length - 6} more
                             </button>
                           )}
                         </>
                       );
                     })()
-                  : // Full categories when not scrolling - Use stores data if available
-                  stores && stores.length > 0
-                  ? stores.map((store, index) => (
-                      <StoreDropdown
-                        key={store._id}
-                        store={store}
-                        isActive={
-                          activePath.length > 0 && activePath[0] === store._id
-                        }
-                        activePath={activePath}
-                        onItemHover={handleItemHover}
-                        onMouseLeave={handleMouseLeave}
-                        index={index}
-                        totalStores={stores.length}
-                        depth={0}
-                      />
-                    ))
-                  : // Fallback to static categoryNavigation if stores not loaded
-                    categoryNavigation.map((category, index) => (
-                      <CategoryDropdown
-                        key={category.id}
-                        category={category}
-                        isActive={
-                          activePath.length > 0 && activePath[0] === category.id
-                        }
-                        activePath={activePath}
-                        onItemHover={handleItemHover}
-                        onMouseLeave={handleMouseLeave}
-                        index={index}
-                        totalCategories={categoryNavigation.length}
-                        depth={0}
-                      />
-                    ))}
+                  ) : (
+                    <NavigationShimmer isCompact={true} />
+                  )
+                ) : // Full categories when not scrolling - Show shimmer if no stores
+                stores && stores.length > 0 ? (
+                  stores.map((store, index) => (
+                    <StoreDropdown
+                      key={store._id}
+                      store={store}
+                      isActive={
+                        activePath.length > 0 && activePath[0] === store._id
+                      }
+                      activePath={activePath}
+                      onItemHover={handleItemHover}
+                      onMouseLeave={handleMouseLeave}
+                      index={index}
+                      totalStores={stores.length}
+                      depth={0}
+                    />
+                  ))
+                ) : (
+                  // Show shimmer if stores not loaded
+                  <NavigationShimmer isCompact={false} />
+                )}
               </div>
             </nav>
 
             {/* Mobile Category Navigation */}
             <div className="md:hidden px-4 py-2">
               <div className="flex overflow-x-auto gap-2 hide-scrollbar category-scroll relative">
-                {(stores && stores.length > 0
-                  ? stores
-                  : categoryNavigation
-                ).map((item) => {
-                  // Handle both store and category data structures
-                  const itemName = item.name;
-                  const itemIcon = item.icon?.url || item.icon;
-                  // Special handling for specific stores
-                  let itemLink;
-                  if (itemName?.toLowerCase() === "jobs") {
-                    itemLink = "/jobs/categories";
-                  } else if (
-                    itemName?.toLowerCase().includes("health") &&
-                    itemName?.toLowerCase().includes("care")
-                  ) {
-                    itemLink = "/health-care";
-                  } else if (itemName?.toLowerCase().includes("vehicles")) {
-                    itemLink = `/garage`;
-                  } else {
-                    itemLink = item.link || `/category/${item.slug}`;
-                  }
-                  const itemKey = item._id || item.id;
+                {stores && stores.length > 0
+                  ? stores.map((item) => {
+                      // Handle store data structure
+                      const itemName = item.name;
+                      const itemIcon = item.icon?.url;
+                      // Special handling for specific stores
+                      let itemLink;
+                      if (itemName?.toLowerCase() === "jobs") {
+                        itemLink = "/jobs/categories";
+                      } else if (
+                        itemName?.toLowerCase().includes("health") &&
+                        itemName?.toLowerCase().includes("care")
+                      ) {
+                        itemLink = "/health-care";
+                      } else if (itemName?.toLowerCase().includes("vehicles")) {
+                        itemLink = `/garage`;
+                      } else {
+                        itemLink = `/category/${item.slug}`;
+                      }
+                      const itemKey = item._id;
 
-                  return (
-                    <Link
-                      key={itemKey}
-                      to={itemLink}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:text-[var(--color-primary)] transition-colors duration-300 no-underline whitespace-nowrap"
-                    >
-                      <img
-                        src={itemIcon}
-                        alt={itemName}
-                        className="w-3.5 h-3.5"
-                      />
-                      <span>{itemName}</span>
-                    </Link>
-                  );
-                })}
+                      return (
+                        <Link
+                          key={itemKey}
+                          to={itemLink}
+                          className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-gray-700 hover:text-[var(--color-primary)] transition-colors duration-300 no-underline whitespace-nowrap"
+                        >
+                          <img
+                            src={itemIcon}
+                            alt={itemName}
+                            className="w-3.5 h-3.5"
+                          />
+                          <span>{itemName}</span>
+                        </Link>
+                      );
+                    })
+                  : // Show shimmer loading items for mobile
+                    Array.from({ length: 4 }, (_, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 animate-pulse"
+                      >
+                        <div className="w-3.5 h-3.5 bg-gray-200 rounded"></div>
+                        <div className="w-16 h-4 bg-gray-200 rounded"></div>
+                      </div>
+                    ))}
               </div>
             </div>
           </div>
@@ -427,44 +423,53 @@ const Header = () => {
               <h3 className="px-6 text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
                 Categories
               </h3>
-              {(stores && stores.length > 0 ? stores : categoryNavigation).map(
-                (item) => {
-                  // Handle both store and category data structures
-                  const itemName = item.name;
-                  const itemIcon = item.icon?.url || item.icon;
-                  // Special handling for specific stores
-                  let itemLink;
-                  if (itemName?.toLowerCase() === "jobs") {
-                    itemLink = "/jobs/categories";
-                  } else if (
-                    itemName?.toLowerCase().includes("health") &&
-                    itemName?.toLowerCase().includes("care")
-                  ) {
-                    itemLink = "/health-care";
-                  } else if (itemName?.toLowerCase().includes("vehicles")) {
-                    itemLink = `/garage`;
-                  } else {
-                    itemLink = item.link || `/category/${item.slug}`;
-                  }
-                  const itemKey = item._id || item.id;
+              {stores && stores.length > 0
+                ? stores.map((item) => {
+                    // Handle store data structure
+                    const itemName = item.name;
+                    const itemIcon = item.icon?.url;
+                    // Special handling for specific stores
+                    let itemLink;
+                    if (itemName?.toLowerCase() === "jobs") {
+                      itemLink = "/jobs/categories";
+                    } else if (
+                      itemName?.toLowerCase().includes("health") &&
+                      itemName?.toLowerCase().includes("care")
+                    ) {
+                      itemLink = "/health-care";
+                    } else if (itemName?.toLowerCase().includes("vehicles")) {
+                      itemLink = `/garage`;
+                    } else {
+                      itemLink = `/category/${item.slug}`;
+                    }
+                    const itemKey = item._id;
 
-                  return (
-                    <Link
-                      key={itemKey}
-                      to={itemLink}
-                      className="flex items-center py-3 px-6 hover:bg-blue-50 hover:text-[var(--color-primary)] text-gray-700 no-underline"
-                      onClick={closeSidebar}
+                    return (
+                      <Link
+                        key={itemKey}
+                        to={itemLink}
+                        className="flex items-center py-3 px-6 hover:bg-blue-50 hover:text-[var(--color-primary)] text-gray-700 no-underline"
+                        onClick={closeSidebar}
+                      >
+                        <img
+                          src={itemIcon}
+                          alt={itemName}
+                          className="w-5 h-5 mr-3"
+                        />
+                        <span>{itemName}</span>
+                      </Link>
+                    );
+                  })
+                : // Show shimmer loading items for sidebar
+                  Array.from({ length: 4 }, (_, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center py-3 px-6 animate-pulse"
                     >
-                      <img
-                        src={itemIcon}
-                        alt={itemName}
-                        className="w-5 h-5 mr-3"
-                      />
-                      <span>{itemName}</span>
-                    </Link>
-                  );
-                }
-              )}
+                      <div className="w-5 h-5 bg-gray-200 rounded mr-3"></div>
+                      <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                    </div>
+                  ))}
             </div>{" "}
             {/* Auth Buttons */}
             <div className="border-t mt-4 pt-4 px-6">

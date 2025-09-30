@@ -2,11 +2,15 @@ import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi2";
-import { AdCard } from "../../components/common";
+import {
+  AdCard,
+  AdCardSkeleton,
+  EmptyState,
+  ErrorState,
+} from "../../components/common";
 import { cities } from "../../data/homePageData";
 import {
   getListingsByCity,
-  selectListings,
   selectListingsLoading,
   selectListingsError,
   selectCityListings,
@@ -188,75 +192,23 @@ const FeaturedListings = ({
             // Loading State
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 px-1 sm:px-2">
               {Array.from({ length: itemsPerSlide }, (_, index) => (
-                <div key={index} className="animate-pulse">
-                  <div className="bg-gray-300 rounded-lg h-64 w-full"></div>
-                  <div className="mt-3 space-y-2">
-                    <div className="bg-gray-300 h-4 rounded w-3/4"></div>
-                    <div className="bg-gray-300 h-3 rounded w-1/2"></div>
-                    <div className="bg-gray-300 h-3 rounded w-full"></div>
-                  </div>
-                </div>
+                <AdCardSkeleton key={index} />
               ))}
             </div>
           ) : error ? (
-            // Error State
-            <div className="text-center py-12 sm:py-16 px-4">
-              <div className="text-red-400 mb-4">
-                <svg
-                  className="w-12 h-12 sm:w-16 sm:h-16 mx-auto"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.962-.833-2.732 0L4.082 15.5c-.77.833.192 2.5 1.732 2.5z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2">
-                Error loading listings
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
-                {error}
-              </p>
-              <button
-                onClick={() => {
-                  dispatch(getListingsByCity({ city: "", limit: 50 }));
-                }}
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
+            // Error State - Minimal sleek design
+            <ErrorState
+              variant="minimal"
+              title="Unable to load listings"
+              message="Something went wrong while loading the content"
+            />
           ) : filteredListings.length === 0 ? (
             // Empty State
-            <div className="text-center py-12 sm:py-16 px-4">
-              <div className="text-gray-400 mb-4">
-                <svg
-                  className="w-12 h-12 sm:w-16 sm:h-16 mx-auto"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1}
-                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2">
-                No listings found
-              </h3>
-              <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
-                No listings available for {selectedCity}. Try selecting a
-                different city.
-              </p>
-            </div>
+            <EmptyState
+              title="No listings found"
+              message={`No listings available for ${selectedCity}. Try selecting a different city or check back later.`}
+              type="listings"
+            />
           ) : (
             // Actual Carousel Content
             <div

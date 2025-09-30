@@ -11,11 +11,13 @@ import {
 } from "react-icons/md";
 import AddCategoryModal from "../../components/admin/AddCategoryModal";
 import FieldManagementModal from "../../components/admin/FieldManagementModal";
+import BulkFieldManagementModal from "../../components/admin/BulkFieldManagementModal";
 import {
   fetchCategoryTree,
   createCategory,
   updateCategory,
   deleteCategory,
+  updateFieldsForAllLeafChildren,
   clearSuccess,
   resetCategories,
 } from "../../features/admin/categoriesSlice";
@@ -60,7 +62,10 @@ const StoreDetail = ({ storeId, onBack }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isManageFieldsModalOpen, setIsManageFieldsModalOpen] = useState(false);
+  const [isBulkFieldsModalOpen, setIsBulkFieldsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [bulkFieldsCategory, setBulkFieldsCategory] = useState(null);
+  const [leafCategoriesCount, setLeafCategoriesCount] = useState(0);
   const [flatCategories, setFlatCategories] = useState([]);
   const [editCategoryData, setEditCategoryData] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -108,7 +113,7 @@ const StoreDetail = ({ storeId, onBack }) => {
         setCurrentPath(newPath);
       }
     }
-  }, [categoryTree, flattenCategoryTree]);
+  }, [categoryTree, flattenCategoryTree, currentPathIds]);
 
   // Fetch category tree when component mounts or storeId changes
   useEffect(() => {
@@ -127,7 +132,9 @@ const StoreDetail = ({ storeId, onBack }) => {
     if (success) {
       setIsAddModalOpen(false);
       setIsManageFieldsModalOpen(false);
+      setIsBulkFieldsModalOpen(false);
       setSelectedCategory(null);
+      setBulkFieldsCategory(null);
       dispatch(clearSuccess());
       if (storeId) {
         dispatch(fetchCategoryTree(storeId));
@@ -164,6 +171,108 @@ const StoreDetail = ({ storeId, onBack }) => {
   const handleManageFields = (category) => {
     setSelectedCategory(category);
     setIsManageFieldsModalOpen(true);
+  };
+
+  // Count leaf categories under a parent category (recursively at any depth)
+  const countLeafCategories = React.useCallback(
+    (category) => {
+      if (!category || !flatCategories) return 0;
+
+      const countLeaves = (cat) => {
+        if (cat.isLeaf) return 1;
+
+        const children = flatCategories.filter(
+          (child) => child.parentId === cat._id
+        );
+        return children.reduce((total, child) => total + countLeaves(child), 0);
+      };
+
+      return countLeaves(category);
+    },
+    [flatCategories]
+  );
+
+  // Check if current level has any leaf categories in the descendant tree
+  const hasLeafCategoriesInTree = React.useCallback(() => {
+    if (currentPath.length === 0) {
+      // At store level - check if any category in the entire tree is a leaf
+      return flatCategories.some((cat) => cat.isLeaf);
+    } else {
+      // At category level - check if current category has leaf descendants
+      const currentCategory = currentPath[currentPath.length - 1];
+      return countLeafCategories(currentCategory) > 0;
+    }
+  }, [currentPath, flatCategories, countLeafCategories]);
+
+  const handleBulkManageFields = (category) => {
+    let leafCount;
+
+    if (category._id === store._id) {
+      // Store level - count all leaf categories in the entire store
+      leafCount = flatCategories.filter((cat) => cat.isLeaf).length;
+    } else {
+      // Category level - count leaf categories under this category
+      leafCount = countLeafCategories(category);
+    }
+
+    setLeafCategoriesCount(leafCount);
+    setBulkFieldsCategory(category);
+    setIsBulkFieldsModalOpen(true);
+  };
+
+  const handleBulkFieldsUpdated = async (fields) => {
+    if (bulkFieldsCategory) {
+      try {
+        if (bulkFieldsCategory._id === store._id) {
+          // Store level - update all top-level categories
+          const topLevelCategories = flatCategories.filter(
+            (cat) => cat.parentId === null && !cat.isLeaf
+          );
+
+          if (topLevelCategories.length === 0) {
+            toast.error("No top-level categories found to update.");
+            return;
+          }
+
+          // Update each top-level category's leaf children
+          const updatePromises = topLevelCategories.map((category) =>
+            dispatch(
+              updateFieldsForAllLeafChildren({
+                categoryId: category._id,
+                fields: fields,
+              })
+            ).unwrap()
+          );
+
+          await Promise.all(updatePromises);
+
+          toast.success(
+            `Successfully applied fields to ${leafCategoriesCount} leaf categories in store "${bulkFieldsCategory.name}"`
+          );
+        } else {
+          // Category level - update this category's leaf children
+          await dispatch(
+            updateFieldsForAllLeafChildren({
+              categoryId: bulkFieldsCategory._id,
+              fields: fields,
+            })
+          ).unwrap();
+
+          toast.success(
+            `Successfully applied fields to ${leafCategoriesCount} leaf categories under "${bulkFieldsCategory.name}"`
+          );
+        }
+
+        // Refresh the category tree to get updated data
+        if (storeId) {
+          dispatch(fetchCategoryTree(storeId));
+        }
+      } catch (error) {
+        console.error("Failed to update bulk fields:", error);
+        toast.error("Failed to update fields. Please try again.");
+        throw error; // Let the modal handle the error state
+      }
+    }
   };
 
   const handleEditCategory = (category) => {
@@ -540,21 +649,52 @@ const StoreDetail = ({ storeId, onBack }) => {
               </span>
             </button>
           ) : (
-            // In store or non-leaf category - show "Add Category/Subcategory" button
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="px-3 py-2 sm:px-4 sm:py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors w-full sm:w-auto"
-            >
-              <span className="flex items-center justify-center space-x-2">
-                <MdAdd className="w-4 h-4" />
-                <span className="hidden sm:inline">
-                  Add {currentPath.length > 0 ? "Subcategory" : "Category"}
+            // In store or non-leaf category - show buttons based on context
+            <div className="flex items-center space-x-3">
+              {/* Show Add Form button at any level that has leaf categories in the tree */}
+              {!isCurrentCategoryLeaf() && hasLeafCategoriesInTree() && (
+                <button
+                  onClick={() => {
+                    if (currentPath.length > 0) {
+                      // At category level - use current category
+                      handleBulkManageFields(
+                        currentPath[currentPath.length - 1]
+                      );
+                    } else {
+                      // At store level - create a fake category object for the store
+                      const storeAsCategory = {
+                        _id: store._id,
+                        name: store.name,
+                        isLeaf: false,
+                      };
+                      handleBulkManageFields(storeAsCategory);
+                    }
+                  }}
+                  className="px-3 py-2 sm:px-4 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors w-full sm:w-auto"
+                >
+                  <span className="flex items-center justify-center space-x-2">
+                    <MdAdd className="w-4 h-4" />
+                    <span className="hidden sm:inline">Add Form</span>
+                    <span className="sm:hidden">Form</span>
+                  </span>
+                </button>
+              )}
+              {/* Regular Add Category button */}
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="px-3 py-2 sm:px-4 sm:py-2 bg-primary text-white rounded-lg hover:bg-secondary transition-colors w-full sm:w-auto"
+              >
+                <span className="flex items-center justify-center space-x-2">
+                  <MdAdd className="w-4 h-4" />
+                  <span className="hidden sm:inline">
+                    Add {currentPath.length > 0 ? "Subcategory" : "Category"}
+                  </span>
+                  <span className="sm:hidden">
+                    Add {currentPath.length > 0 ? "Sub" : "Cat"}
+                  </span>
                 </span>
-                <span className="sm:hidden">
-                  Add {currentPath.length > 0 ? "Sub" : "Cat"}
-                </span>
-              </span>
-            </button>
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -722,6 +862,19 @@ const StoreDetail = ({ storeId, onBack }) => {
         }}
         category={selectedCategory}
         onFieldsUpdated={handleFieldsUpdated}
+      />
+
+      {/* Bulk Field Management Modal */}
+      <BulkFieldManagementModal
+        isOpen={isBulkFieldsModalOpen}
+        onClose={() => {
+          setIsBulkFieldsModalOpen(false);
+          setBulkFieldsCategory(null);
+          setLeafCategoriesCount(0);
+        }}
+        parentCategory={bulkFieldsCategory}
+        leafCategoriesCount={leafCategoriesCount}
+        onFieldsUpdated={handleBulkFieldsUpdated}
       />
 
       {/* Delete Category Confirmation Dialog */}

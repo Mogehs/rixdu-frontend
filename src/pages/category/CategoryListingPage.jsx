@@ -12,10 +12,14 @@ import {
   FiDollarSign,
   FiHome,
   FiTag,
-  FiRefreshCw,
   FiSquare,
 } from "react-icons/fi";
-import { AdCard } from "../../components/common";
+import {
+  AdCard,
+  AdCardSkeleton,
+  EmptyState,
+  ErrorState,
+} from "../../components/common";
 import {
   searchListings,
   getListings,
@@ -838,16 +842,7 @@ const PropertyGrid = ({
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {[...Array(8)].map((_, index) => (
-          <div
-            key={index}
-            className="bg-white rounded-lg border border-gray-200 p-4 animate-pulse"
-          >
-            <div className="h-48 bg-gray-200 rounded-lg mb-4"></div>
-            <div className="space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-            </div>
-          </div>
+          <AdCardSkeleton key={index} />
         ))}
       </div>
     );
@@ -855,48 +850,28 @@ const PropertyGrid = ({
 
   if (error) {
     return (
-      <div className="text-center py-12">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-          <h3 className="text-lg font-medium text-red-800 mb-2">
-            Error Loading Listings
-          </h3>
-          <p className="text-red-600 mb-4">{error}</p>
-          <button
-            onClick={onClearFilters}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <FiRefreshCw className="w-4 h-4" />
-            Try Again
-          </button>
-        </div>
-      </div>
+      <ErrorState
+        title="Error Loading Listings"
+        message={error}
+        onRetry={onClearFilters}
+        retryText="Try Again"
+      />
     );
   }
 
   if (propertyListings.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 max-w-md mx-auto">
-          <FiSearch className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-800 mb-2">
-            No listings found
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {hasActiveFilters
-              ? "Try adjusting your filters to see more results."
-              : "No listings are available at the moment."}
-          </p>
-          {hasActiveFilters && (
-            <button
-              onClick={onClearFilters}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <FiX className="w-4 h-4" />
-              Clear Filters
-            </button>
-          )}
-        </div>
-      </div>
+      <EmptyState
+        title="No listings found"
+        message={
+          hasActiveFilters
+            ? "Try adjusting your filters to see more results."
+            : "No listings are available at the moment."
+        }
+        showRetry={hasActiveFilters}
+        onRetry={onClearFilters}
+        type="listings"
+      />
     );
   }
 

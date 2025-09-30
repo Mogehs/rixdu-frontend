@@ -1,7 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { HiOutlineArrowLongRight } from "react-icons/hi2";
+import { CategoryShimmer } from "../../components/common";
 
-const PopularCategories = ({ categories, isEmirate = false, emirate }) => {
+const PopularCategories = ({
+  categories,
+  isEmirate = false,
+  emirate,
+  loading = false,
+}) => {
   const navigate = useNavigate();
 
   const handleSubCategoryClick = (e, category, subCategory) => {
@@ -43,87 +49,118 @@ const PopularCategories = ({ categories, isEmirate = false, emirate }) => {
     }
   };
 
+  // Show shimmer loading while categories are being fetched
+  if (loading) {
+    return <CategoryShimmer />;
+  }
+
   return (
     <div className="section-container">
       {!isEmirate && <h2 className="section-heading">Popular Categories</h2>}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 sm:gap-8 md:gap-10 lg:gap-12 gap-y-12 sm:gap-y-16 md:gap-y-16 lg:gap-y-20 my-6 sm:my-10 md:my-14 lg:my-18 justify-center">
-        {categories.map((store) => (
-          <div
-            key={store.id}
-            className="flex flex-col justify-between gap-3 sm:gap-4 p-4 sm:p-0 rounded-xl bg-white/50 sm:bg-transparent shadow-sm sm:shadow-none border border-gray-100 sm:border-0"
-          >
-            <div className="flex flex-col gap-3">
-              <div className="flex gap-2 items-center">
-                <div className="bg-primary/10 p-2 rounded-full sm:bg-transparent sm:p-0">
-                  <img
-                    src={store.icon?.url || "/default-store-icon.png"}
-                    alt={store.name}
-                    className="w-5 md:w-8 lg:w-10"
-                  />
+        {categories.map((store) => {
+          const maxCategoriesToShow = 4;
+          const hasCategories =
+            store.categories &&
+            Array.isArray(store.categories) &&
+            store.categories.length > 0;
+          const visibleCategories = hasCategories
+            ? store.categories.slice(0, maxCategoriesToShow)
+            : [];
+          const remainingCount =
+            hasCategories && store.categories.length > maxCategoriesToShow
+              ? store.categories.length - maxCategoriesToShow
+              : 0;
+
+          return (
+            <div
+              key={store.id}
+              className="flex flex-col justify-between gap-3 sm:gap-4 p-4 sm:p-0 rounded-xl bg-white/50 sm:bg-transparent shadow-sm sm:shadow-none border border-gray-100 sm:border-0"
+            >
+              <div className="flex flex-col gap-3">
+                <div className="flex gap-2 items-center">
+                  <div className="bg-primary/10 p-2 rounded-full sm:bg-transparent sm:p-0">
+                    <img
+                      src={store.icon?.url || "/default-store-icon.png"}
+                      alt={store.name}
+                      className="w-5 md:w-8 lg:w-10"
+                    />
+                  </div>
+                  <h3 className="text-base font-semibold capitalize lh-[0.6]">
+                    {store.name}
+                  </h3>
                 </div>
-                <h3 className="text-base font-semibold capitalize lh-[0.6]">
-                  {store.name}
-                </h3>
-              </div>
 
-              <div className="flex flex-col gap-2 sm:gap-1 pl-2 sm:pl-0">
-                {store.categories &&
-                  Array.isArray(store.categories) &&
-                  store.categories.map((category) => {
-                    const normalizedStoreName = store.name.replace(/\s+/g, "-");
-                    const normalizedSubCategoryName =
-                      category.name?.replace(/\s+/g, "-") || "";
-                    let linkUrl = `/all-listings/?category=${normalizedStoreName}&subCategory=${normalizedSubCategoryName}`;
+                <div className="flex flex-col gap-2 sm:gap-1 pl-2 sm:pl-0">
+                  {hasCategories &&
+                    visibleCategories.map((category) => {
+                      const normalizedStoreName = store.name.replace(
+                        /\s+/g,
+                        "-"
+                      );
+                      const normalizedSubCategoryName =
+                        category.name?.replace(/\s+/g, "-") || "";
+                      let linkUrl = `/all-listings/?category=${normalizedStoreName}&subCategory=${normalizedSubCategoryName}`;
 
-                    if (
-                      store.name.toLowerCase() === "jobs" &&
-                      category.name.toLowerCase() === "i want a job"
-                    ) {
-                      linkUrl = "/jobs/main";
-                    } else if (
-                      store.name.toLowerCase() === "jobs" &&
-                      category.name.toLowerCase() === "i'm hiring"
-                    ) {
-                      linkUrl = "/hire-talent";
-                    }
+                      if (
+                        store.name.toLowerCase() === "jobs" &&
+                        category.name.toLowerCase() === "i want a job"
+                      ) {
+                        linkUrl = "/jobs/main";
+                      } else if (
+                        store.name.toLowerCase() === "jobs" &&
+                        category.name.toLowerCase() === "i'm hiring"
+                      ) {
+                        linkUrl = "/hire-talent";
+                      }
 
-                    return (
-                      <Link
-                        key={category._id}
-                        to={linkUrl}
-                        onClick={(e) =>
-                          handleSubCategoryClick(
-                            e,
-                            { ...store },
-                            { ...category }
-                          )
-                        }
-                        className='text-dark text-sm hover:text-primary transition-colors duration-300 flex items-center gap-1 before:content-["•"] before:text-primary/70 sm:before:content-none'
-                      >
-                        {category.name}
-                      </Link>
-                    );
-                  })}
-                {(!store.categories ||
-                  !Array.isArray(store.categories) ||
-                  store.categories.length === 0) && (
-                  <span className="text-gray-500 text-sm italic">
-                    No categories available
-                  </span>
-                )}
-                {store.name !== "Jobs" && (
-                  <button
-                    onClick={() => handleClickOnAll(store)}
-                    className="text-primary py-2 sm:py-[6px] rounded-full flex gap-2 text-sm w-full sm:w-auto mt-1 sm:mt-0"
-                  >
-                    <span>All in {store.name}</span>
-                    <HiOutlineArrowLongRight className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                )}
+                      return (
+                        <Link
+                          key={category._id}
+                          to={linkUrl}
+                          onClick={(e) =>
+                            handleSubCategoryClick(
+                              e,
+                              { ...store },
+                              { ...category }
+                            )
+                          }
+                          className='text-dark text-sm hover:text-primary transition-colors duration-300 flex items-center gap-1 before:content-["•"] before:text-primary/70 sm:before:content-none'
+                        >
+                          {category.name}
+                        </Link>
+                      );
+                    })}
+
+                  {/* Show "+X more" indicator if there are more categories */}
+                  {remainingCount > 0 && (
+                    <button
+                      onClick={() => handleClickOnAll(store)}
+                      className='text-primary text-sm hover:text-primary/80 transition-colors duration-300 flex items-center gap-1 before:content-["•"] before:text-primary/70 sm:before:content-none font-medium rounded-full ml-0 sm:ml-0'
+                    >
+                      +{remainingCount} more
+                    </button>
+                  )}
+
+                  {!hasCategories && (
+                    <span className="text-gray-500 text-sm italic">
+                      No categories available
+                    </span>
+                  )}
+                  {store.name !== "Jobs" && (
+                    <button
+                      onClick={() => handleClickOnAll(store)}
+                      className="text-primary py-2 sm:py-[6px] rounded-full flex gap-2 text-sm w-full sm:w-auto mt-1 sm:mt-0"
+                    >
+                      <span>All in {store.name}</span>
+                      <HiOutlineArrowLongRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

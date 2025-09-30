@@ -102,39 +102,28 @@ const EnhancedHeroSection = () => {
       [name]: value,
     }));
 
-    // Clear validation error for this field
-    if (validationErrors[name]) {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
+    // Clear validation when user makes a selection
+    if (showValidation) {
+      setShowValidation(false);
+      setValidationErrors({});
     }
   };
 
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
-
-    // Clear search validation error
-    if (validationErrors.search) {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.search;
-        return newErrors;
-      });
+    // Clear validation when user starts typing
+    if (showValidation) {
+      setShowValidation(false);
+      setValidationErrors({});
     }
   };
 
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
-
-    // Clear filter validation error
-    if (validationErrors.filter) {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.filter;
-        return newErrors;
-      });
+    // Clear validation when user selects a filter
+    if (showValidation) {
+      setShowValidation(false);
+      setValidationErrors({});
     }
   };
 
@@ -186,35 +175,6 @@ const EnhancedHeroSection = () => {
 
         {/* Search Form */}
         <div className="bg-white rounded-2xl p-4 shadow-2xl w-full max-w-5xl mx-auto">
-          {/* Validation Summary */}
-          {showValidation && Object.keys(validationErrors).length > 0 && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-              <div className="flex items-start gap-2">
-                <svg
-                  className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <div className="flex-1">
-                  <p className="text-red-800 text-sm font-medium">
-                    Please fill in all required fields:
-                  </p>
-                  <ul className="text-red-700 text-xs mt-1 list-disc list-inside">
-                    {Object.values(validationErrors).map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Search Tabs (Buy/Rent etc.) */}
           <div className="flex flex-col lg:flex-row gap-3 mb-4">
             <div className="flex bg-gray-100 rounded-lg p-1">
@@ -243,17 +203,8 @@ const EnhancedHeroSection = () => {
                 value={search}
                 onChange={handleSearchChange}
                 placeholder="Enter location *"
-                className={`w-full pl-9 pr-4 py-2 border rounded-lg outline-none text-gray-800 focus:border-primary transition-all duration-300 text-sm ${
-                  showValidation && validationErrors.search
-                    ? "border-red-500 focus:border-red-500"
-                    : "border-gray-300"
-                }`}
+                className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg outline-none text-gray-800 focus:border-primary transition-all duration-300 text-sm"
               />
-              {showValidation && validationErrors.search && (
-                <p className="text-red-500 text-xs mt-1 absolute z-10">
-                  {validationErrors.search}
-                </p>
-              )}
             </div>
 
             {/* Search Button */}
@@ -270,7 +221,7 @@ const EnhancedHeroSection = () => {
           {/* Filter Row */}
           <div className="flex flex-wrap gap-2 items-center mb-6">
             {/* Filter Buttons */}
-            <div className="flex bg-gray-100 rounded-lg p-1 relative">
+            <div className="flex bg-gray-100 rounded-lg p-1">
               {currentContent.filters.map((filter) => (
                 <button
                   key={filter}
@@ -279,22 +230,11 @@ const EnhancedHeroSection = () => {
                     activeFilter === filter
                       ? "bg-primary text-white shadow-sm"
                       : "text-gray-600 hover:text-gray-800"
-                  } ${
-                    showValidation &&
-                    validationErrors.filter &&
-                    activeFilter === "All"
-                      ? "ring-1 ring-red-500"
-                      : ""
                   }`}
                 >
                   {filter}
                 </button>
               ))}
-              {showValidation && validationErrors.filter && (
-                <p className="text-red-500 text-xs absolute -bottom-5 left-0 whitespace-nowrap">
-                  {validationErrors.filter}
-                </p>
-              )}
             </div>
 
             {/* Custom Dropdown Filters */}
@@ -310,20 +250,35 @@ const EnhancedHeroSection = () => {
                     dropdown.required ? " *" : ""
                   }`}
                   size="sm"
-                  className={`min-w-[120px] ${
-                    showValidation && validationErrors[dropdown.name]
-                      ? "ring-1 ring-red-500"
-                      : ""
-                  }`}
+                  className="min-w-[120px]"
                 />
-                {showValidation && validationErrors[dropdown.name] && (
-                  <p className="text-red-500 text-xs mt-1 absolute whitespace-nowrap z-10">
-                    {validationErrors[dropdown.name]}
-                  </p>
-                )}
               </div>
             ))}
           </div>
+
+          {/* Validation Message */}
+          {showValidation && Object.keys(validationErrors).length > 0 && (
+            <div className="flex items-center justify-center pt-2 pb-1">
+              <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-4 py-2 rounded-full border border-slate-200 shadow-sm">
+                <svg
+                  className="w-4 h-4 text-slate-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+                <span className="text-sm font-medium">
+                  Please complete all required fields to search
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* AI Suggestion Row */}
           <div className="flex items-center justify-between pt-3 border-t border-gray-100">

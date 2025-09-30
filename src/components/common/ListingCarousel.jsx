@@ -2,6 +2,9 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from "react-icons/hi2";
 import AdCard from "./AdCard";
+import AdCardSkeleton from "./AdCardSkeleton";
+import EmptyState from "./EmptyState";
+import ErrorState from "./ErrorState";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getListings,
@@ -9,6 +12,7 @@ import {
   selectListings,
   selectStoreListings,
   selectListingsLoading,
+  selectListingsError,
 } from "../../features/listings";
 
 const ListingCarousel = ({
@@ -21,6 +25,7 @@ const ListingCarousel = ({
   autoPlay = true,
   autoPlayInterval = 5000,
   specificStore = null, // New prop to specify a particular store
+  storeLoading = false, // New prop for store loading state
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedStore, setSelectedStore] = useState({ name: "All", slug: "" });
@@ -33,6 +38,7 @@ const ListingCarousel = ({
   const allListings = useSelector(selectListings);
   const storeSpecificListings = useSelector(selectStoreListings);
   const loading = useSelector(selectListingsLoading);
+  const error = useSelector(selectListingsError);
 
   // Choose the appropriate listings data based on the current selection
   const storeListings = useMemo(() => {
@@ -222,23 +228,19 @@ const ListingCarousel = ({
           className="overflow-hidden mx-4 sm:mx-6 lg:mx-10 py-2"
           ref={carouselRef}
         >
-          {loading ? (
+          {loading || storeLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 px-1 sm:px-2">
               {Array.from({ length: itemsPerSlide }, (_, index) => (
-                <div
-                  key={index}
-                  className="animate-pulse bg-white rounded-lg overflow-hidden shadow-sm"
-                >
-                  {/* Keep same height as AdCard */}
-                  <div className="h-80 w-full bg-gray-200"></div>
-                  <div className="p-3 space-y-2">
-                    <div className="bg-gray-300 h-4 rounded w-3/4"></div>
-                    <div className="bg-gray-300 h-3 rounded w-1/2"></div>
-                    <div className="bg-gray-300 h-3 rounded w-full"></div>
-                  </div>
-                </div>
+                <AdCardSkeleton key={index} />
               ))}
             </div>
+          ) : error ? (
+            // Error State - Minimal sleek design
+            <ErrorState
+              variant="minimal"
+              title="Unable to load listings"
+              message="Something went wrong while loading the content"
+            />
           ) : (
             <div
               className="flex transition-transform duration-700 ease-in-out"
@@ -289,31 +291,14 @@ const ListingCarousel = ({
       )}
 
       {/* Empty State */}
-      {filteredListings.length === 0 && !loading && (
-        <div className="text-center py-12 sm:py-16 px-4">
-          <div className="text-gray-400 mb-4">
-            <svg
-              className="w-12 h-12 sm:w-16 sm:h-16 mx-auto"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1}
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-              />
-            </svg>
-          </div>
-          <h3 className="text-lg sm:text-xl font-medium text-gray-900 mb-2">
-            No listings found
-          </h3>
-          <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto">
-            No listings available for {selectedStore.name}. Try selecting a
-            different store.
-          </p>
-        </div>
+      {filteredListings.length === 0 && !(loading || storeLoading) && (
+        <EmptyState
+          title="No listings found"
+          message={`No listings available for ${
+            selectedStore.name === "All" ? "any store" : selectedStore.name
+          }. Try selecting a different category or check back later.`}
+          type="stores"
+        />
       )}
     </section>
   );

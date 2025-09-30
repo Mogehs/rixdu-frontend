@@ -1,9 +1,9 @@
 import React, { Suspense, lazy } from "react";
-import { BrowserRouter } from "react-router-dom";
+// import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "./routes/AppRoutes";
 import ScrollRestoration from "./components/ScrollRestoration";
 import AuthInitializer from "./components/auth/AuthInitializer";
-import LoadingScreen from "./components/LoadingScreen";
+// import LoadingScreen from "./components/LoadingScreen";
 import "./App.css";
 
 // Lazy load heavy components that can delay initial render
@@ -18,10 +18,10 @@ const App = () => {
   return (
     <AuthInitializer>
       <ScrollRestoration />
-      <Suspense fallback={<LoadingScreen />}>
-        <NotificationSocketBridge />
-        <FCMTokenManager />
-      </Suspense>
+      {/* <Suspense fallback={<LoadingScreen />}> */}
+      <NotificationSocketBridge />
+      <FCMTokenManager />
+      {/* </Suspense> */}
       <AppRoutes />
     </AuthInitializer>
   );

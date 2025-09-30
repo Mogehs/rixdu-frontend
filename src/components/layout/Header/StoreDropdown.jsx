@@ -167,7 +167,7 @@ const StoreDropdown = ({
                 </span>
                 {hasChildren && (
                   <svg
-                    className="w-2.5 h-2.5 text-gray-400 flex-shrink-0 ml-1"
+                    className="w-2 h-2 text-gray-300 flex-shrink-0 ml-1"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -175,7 +175,7 @@ const StoreDropdown = ({
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
+                      strokeWidth={1.5}
                       d="M9 5l7 7-7 7"
                     />
                   </svg>
@@ -237,7 +237,7 @@ const StoreDropdown = ({
         {/* Show arrow if store has categories */}
         {store.categories && store.categories.length > 0 && (
           <svg
-            className="w-2 h-2 ml-1 text-gray-400 group-hover:text-gray-600 flex-shrink-0"
+            className="w-1 h-1 ml-0 text-gray-300 group-hover:text-gray-400 flex-shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -246,7 +246,7 @@ const StoreDropdown = ({
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeWidth={2}
+              strokeWidth={1}
               d="M19 9l-7 7-7-7"
             />
           </svg>

@@ -8,7 +8,7 @@ RewriteEngine On
 # Route all requests to index.html if not a real file or directory
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.html [QSA,L]
+RewriteRule . /index.html [L]
 
 # Enable CORS
 Header set Access-Control-Allow-Origin "*"

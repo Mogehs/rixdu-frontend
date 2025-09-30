@@ -1,6 +1,5 @@
-import React, { use, useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
-import { categoriesData } from "../../data/data";
+import React, { useEffect } from "react";
+import { useParams } from "react-router-dom";
 import * as assets from "../../assets";
 import PopularCategories from "../home/PopularCategories";
 import { useDispatch, useSelector } from "react-redux";
@@ -10,7 +9,7 @@ const EmirateCategoriesPage = () => {
   const { emirate } = useParams();
   const formattedEmirate = emirate.replace(/-/g, " ");
 
-  const { stores } = useSelector((state) => state.adminStores);
+  const { stores, loading } = useSelector((state) => state.adminStores);
   const dispatch = useDispatch();
   useEffect(() => {
     const fetchStoresArray = async () => {
@@ -30,6 +29,7 @@ const EmirateCategoriesPage = () => {
         categories={stores}
         isEmirate={true}
         emirate={emirate}
+        loading={loading}
       />
 
       {/* <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
